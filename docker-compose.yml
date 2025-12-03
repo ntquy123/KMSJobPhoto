@@ -12,7 +12,7 @@ services:
 
   nginx:
     image: nginx:latest
-    container_name: erp-nginx-proxy
+    container_name: kmsjobphoto-nginx-proxy
     ports:
       - "8082:8082"
     volumes:
