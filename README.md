@@ -14,7 +14,7 @@ FGInventoryManagement is a .NET 8 Web API that powers finished-goods inventory o
 
 ## Example Project Information
 - **Server address:** `10.109.25.200`
-- **Setup link:** [`http://10.109.25.200:8081/api/BuyerLabelUpload/GetComBoBoxForBuyer`](http://10.109.25.200:8081/api/BuyerLabelUpload/GetComBoBoxForBuyer)
+- **Setup link:** [`http://10.109.25.200:8082/api/BuyerLabelUpload/GetComBoBoxForBuyer`](http://10.109.25.200:8082/api/BuyerLabelUpload/GetComBoBoxForBuyer)
 
 ---
 

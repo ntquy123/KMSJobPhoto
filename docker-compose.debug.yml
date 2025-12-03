@@ -18,7 +18,7 @@ services:
     
     # Vẫn expose cổng nội bộ (để Nginx có thể proxy nếu cần)
     expose:
-      - "8081" 
+      - "8082" 
     
     # Optional: Volume mount source code để debug nhanh hơn (nếu bạn thay đổi code thường xuyên)
     # volumes:
@@ -28,9 +28,9 @@ services:
   nginx:
     image: nginx:latest
     container_name: erp-nginx-proxy
-    # Map cổng 8081 của Host ra cổng 8080 của Nginx
+    # Map cổng 8082 của Host ra cổng 8080 của Nginx
     ports:
-      - "8081:8080" 
+      - "8082:8080" 
     volumes:
       - ./nginx/fginventory.conf:/etc/nginx/conf.d/fginventory.conf
     
