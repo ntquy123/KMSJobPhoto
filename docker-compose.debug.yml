@@ -7,7 +7,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: erp-dotnet-api
+    container_name: kmsjobphoto-dotnet-api
     
     # 🛑 QUAN TRỌNG 1: Tắt tính năng tự khởi động lại
     restart: "no" 

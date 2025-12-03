@@ -36,7 +36,7 @@ FGInventoryManagement is a .NET 8 Web API that powers finished-goods inventory o
 | View running Docker containers | `docker ps` |
 | Build and start Docker containers | `docker compose up --build -d` |
 | Stop and remove all containers | `docker compose down` |
-| View .NET API container logs | `docker logs erp-dotnet-api` |
+| View .NET API container logs | `docker logs kmsjobphoto-dotnet-api` |
 | View Nginx proxy container logs | `docker logs erp-nginx-proxy` |
 
 ---

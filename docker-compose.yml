@@ -5,7 +5,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: erp-dotnet-api
+    container_name: kmsjobphoto-dotnet-api
     expose:
       - "8082"
     restart: always
