@@ -19,7 +19,7 @@ using System.Security.Claims;
 using System.Text;
 using Newtonsoft.Json;
 
-namespace erpsolution.api.Controllers.FGInventoryMobile
+namespace erpsolution.api.Controllers.KMSJobPhotoMobile
 {
     public class AmtAuthController : ControllerBaseEx<IAmtAuthService, TCMUSMT, decimal>
     {

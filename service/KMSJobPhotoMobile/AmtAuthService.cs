@@ -9,7 +9,7 @@ using System.Linq;
 
 
 
-namespace erpsolution.service.FGInventoryMobile
+namespace erpsolution.service.KMSJobPhotoMobile
 {
     public class AmtAuthService : ServiceBase<TCMUSMT>, IAmtAuthService
     {

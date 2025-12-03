@@ -3,7 +3,7 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 # Copy solution and project files to leverage Docker layer caching
-COPY FGInventoryManagement.sln ./
+COPY KMSJobPhoto.sln ./
 COPY erpsolution.api.csproj ./
 COPY dal/erpsolution.dal.csproj dal/
 COPY entities/erpsolution.entities.csproj entities/

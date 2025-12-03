@@ -1,5 +1,5 @@
 ﻿using erpsolution.entities;
-using erpsolution.service.FGInventoryMobile;
+using erpsolution.service.KMSJobPhotoMobile;
 using erpsolution.service.Interface;
  
 namespace erpsolution.api.Helper
