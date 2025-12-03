@@ -1,0 +1,29 @@
+# Build artifacts
+bin/
+obj/
+
+# User-specific files
+*.user
+*.rsuser
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Visual Studio cache/options directory
+.vs/
+
+# Dotnet specific restore outputs
+*.csproj.nuget.dgspec.json
+*.csproj.nuget.g.props
+*.csproj.nuget.g.targets
+project.lock.json
+
+# Logs
+*.log
+
+# Git metadata
+.git/
+.gitignore
+
+# Docker cache directories
+**/.docker/**

@@ -1,0 +1,59 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+
+    <!-- Ngăn SDK quét vào bin/obj và cả thư mục entities nằm bên trong -->
+    <DefaultItemExcludes>
+      $(DefaultItemExcludes);
+      **\bin\**;**\obj\**;
+      entities\**;  <!-- loại trừ toàn bộ cây entities -->
+    </DefaultItemExcludes>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <!-- Bật tính năng XML doc -->
+    <DocumentationFile>$(OutputPath)erpsolution.api.xml</DocumentationFile>
+    <!-- Đặt đường dẫn đúng với từng cấu hình build -->
+    <CopyDocumentationFileToOutputDirectory>true</CopyDocumentationFileToOutputDirectory>
+    <CopyDocumentationFileToPublishDirectory>true</CopyDocumentationFileToPublishDirectory>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Phòng trường hợp vẫn có item lẻ lọt vào -->
+    <Compile Remove="**\bin\**\*.cs" />
+    <Compile Remove="**\obj\**\*.cs" />
+    <Compile Remove="dal\**" />
+    <Compile Remove="lib\**" />
+    <Compile Remove="service\**" />
+    <None Remove="**\obj\**\*" />
+    <None Remove="dal\**" />
+    <None Remove="lib\**" />
+    <None Remove="service\**" />
+    <EmbeddedResource Remove="**\obj\**\*" />
+    <EmbeddedResource Remove="dal\**" />
+    <EmbeddedResource Remove="lib\**" />
+    <EmbeddedResource Remove="service\**" />
+    <Content Remove="**\obj\**\*" />
+    <Content Remove="dal\**" />
+    <Content Remove="lib\**" />
+    <Content Remove="service\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="15.1.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.3" />
+    <PackageReference Include="Microsoft.IO.RecyclableMemoryStream" Version="3.0.1" />
+    <PackageReference Include="Oracle.EntityFrameworkCore" Version="8.23.60" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore.Newtonsoft" Version="9.0.6" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.14.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Giữ ProjectReference, KHÔNG kéo source trực tiếp -->
+    <ProjectReference Include="dal\erpsolution.dal.csproj" />
+    <ProjectReference Include="entities\erpsolution.entities.csproj" />
+    <ProjectReference Include="service\erpsolution.service.csproj" />
+  </ItemGroup>
+</Project>

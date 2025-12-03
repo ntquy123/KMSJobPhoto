@@ -1,0 +1,40 @@
+﻿version: '3.8'
+
+services:
+  # 1. Dịch vụ ứng dụng .NET (CHẾ ĐỘ DEBUG)
+  app:
+    # Build image từ Dockerfile hiện tại
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: erp-dotnet-api
+    
+    # 🛑 QUAN TRỌNG 1: Tắt tính năng tự khởi động lại
+    restart: "no" 
+    
+    # 🛑 QUAN TRỌNG 2: Thay đổi lệnh chính để giữ container luôn chạy
+    # Điều này ghi đè lên ENTRYPOINT trong Dockerfile
+    command: ["sleep", "infinity"] 
+    
+    # Vẫn expose cổng nội bộ (để Nginx có thể proxy nếu cần)
+    expose:
+      - "8081" 
+    
+    # Optional: Volume mount source code để debug nhanh hơn (nếu bạn thay đổi code thường xuyên)
+    # volumes:
+    #   - .:/src 
+
+  # 2. Dịch vụ Nginx (Dừng tạm thời hoặc giữ lại để kiểm tra mạng)
+  nginx:
+    image: nginx:latest
+    container_name: erp-nginx-proxy
+    # Map cổng 8081 của Host ra cổng 8080 của Nginx
+    ports:
+      - "8081:8080" 
+    volumes:
+      - ./nginx/fginventory.conf:/etc/nginx/conf.d/fginventory.conf
+    
+    # Tắt restart để Nginx không liên tục cố gắng kết nối đến app đang lỗi
+    restart: "no"
+    depends_on:
+      - app

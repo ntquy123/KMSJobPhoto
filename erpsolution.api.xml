@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>erpsolution.api</name>
+    </assembly>
+    <members>
+        <member name="P:erpsolution.api.Base.BaseController.UserCreator">
+            <summary>
+            Username that authorized
+            </summary>
+        </member>
+        <member name="F:erpsolution.api.Base.BaseController.LanguageCol">
+            <summary>
+            Current language request
+            </summary>
+        </member>
+        <member name="M:erpsolution.api.Base.ControllerBaseEx`3.Get(System.Nullable{System.Int32},System.Nullable{System.Int32})">
+            <summary>
+            Get List Model
+            </summary>
+            <param name="page"></param>
+            <param name="pageSize"></param>
+            <returns></returns>
+        </member>
+        <member name="M:erpsolution.api.Base.ControllerBaseEx`3.First(`2)">
+            <summary>
+            Get Model by ID
+            </summary>
+            <param name="id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:erpsolution.api.Base.ControllerBaseEx`3.Add(`1)">
+            <summary>
+            Add model
+            </summary>
+        </member>
+        <member name="M:erpsolution.api.Base.ControllerBaseEx`3.Update(`1)">
+            <summary>
+            Update model
+            </summary>
+            <param name="item"></param>
+            <returns></returns>
+        </member>
+        <member name="M:erpsolution.api.Base.ControllerBaseEx`3.Delete(`2)">
+            <summary>
+            Delete model
+            </summary>
+            <param name="id"></param>
+            <returns></returns>
+        </member>
+    </members>
+</doc>
