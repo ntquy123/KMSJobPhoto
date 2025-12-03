@@ -14,7 +14,7 @@ FGInventoryManagement is a .NET 8 Web API that powers finished-goods inventory o
 
 ## Example Project Information
 - **Server address:** `10.109.25.200`
-- **Setup link:** [`http://10.109.25.200:8082/api/BuyerLabelUpload/GetComBoBoxForBuyer`](http://10.109.25.200:8082/api/BuyerLabelUpload/GetComBoBoxForBuyer)
+- **Setup link:** [`http://10.109.25.200:8083/api/BuyerLabelUpload/GetComBoBoxForBuyer`](http://10.109.25.200:8083/api/BuyerLabelUpload/GetComBoBoxForBuyer)
 
 ---
 
@@ -30,6 +30,8 @@ FGInventoryManagement is a .NET 8 Web API that powers finished-goods inventory o
 
 ## Basic Docker Commands
 > **Note:** Always `cd` into the project directory that contains the `Dockerfile` before running Docker commands.
+check port use or not : sudo lsof -i :8083
+
 
 | Task | Command |
 |------|---------|

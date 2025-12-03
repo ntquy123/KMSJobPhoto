@@ -7,12 +7,12 @@ services:
       dockerfile: Dockerfile
     container_name: kmsjobphoto-dotnet-api
     expose:
-      - "8082"
+      - "8083"
     # Host Linux server already runs an Nginx reverse proxy on port 8080.
     # To reuse that proxy instead of starting another Nginx container here,
     # publish the API directly so the existing proxy can route to it.
     ports:
-      - "8082:8082"
+      - "8083:8083"
     restart: always
 
   # nginx:
@@ -22,7 +22,7 @@ services:
   #   # service would conflict with the running instance. Keep the block for
   #   # reference if deploying in an isolated environment without an external proxy.
   #   ports:
-  #     - "8082:8082"
+  #     - "8083:8083"
   #   volumes:
   #     - ./nginx/kmsjobphoto.conf:/etc/nginx/conf.d/kmsjobphoto.conf:ro
   #     - ./swagger-ui-5.30.2:/usr/share/nginx/pkwms/swagger-ui-5.30.2:ro
