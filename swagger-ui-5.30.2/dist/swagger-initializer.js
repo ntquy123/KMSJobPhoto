@@ -9,7 +9,7 @@ window.onload = function() {
         name: "Auth API"
       },
       {
-        url: "/api/swagger/fg_inventory_mobile/swagger.json",
+        url: "/api/swagger/kmsjobphoto_mobile/swagger.json",
         name: "FG Inventory API"
       },
       {

@@ -5,6 +5,7 @@ using entities.Common;
 using erpsolution.api.Base;
 using erpsolution.dal.EF;
 using erpsolution.entities;
+using erpsolution.service.Common.Base.Interface;
 using erpsolution.service.Interface;
 using erpsolution.service.Interface.SystemMaster;
 using Microsoft.AspNetCore.Authorization;
@@ -12,19 +13,30 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace erpsolution.api.Controllers.KMSJobPhotoMobile
 {
-    public class AmtTodoController : ControllerBaseEx<IAuditResultRegistrationService, AuditTodoRow, decimal>
+    public class AuditResultRegistrationController : ControllerBaseEx<IAuditResultRegistrationService, AuditTodoRow, decimal>
     {
         private readonly IApiExecutionLockService _ApiExcLockService;
 
-        public AmtTodoController(
+        public AuditResultRegistrationController(
             IAuditResultRegistrationService service,
             IApiExecutionLockService ApiExcLockService,
             ICurrentUser currentUser) : base(service, currentUser)
         {
             _ApiExcLockService = ApiExcLockService;
         }
-
-        [ApiExplorerSettings(GroupName = "todo")]
+        /// <param name="request">
+        /// Data input 
+        /// Example:
+        /// ```json
+        /// {
+        ///   "FromDate": "2025-06-19",
+        ///   "ToDate": "2026-12-31",
+        ///   "Status": "ALL", //TODO,COMPLETED, ALL
+        ///   "PlayerId": "20240340"
+        /// }
+        /// ```
+        /// </param>
+        [ApiExplorerSettings(GroupName = "kmsjobphoto_mobile")]
         [HttpPost(nameof(GetTodoList))]
         [ProducesResponseType(typeof(HandleResponse<object>), 400)]
         [AllowAnonymous]
@@ -37,7 +49,7 @@ namespace erpsolution.api.Controllers.KMSJobPhotoMobile
             }
             catch (Exception ex)
             {
-                var message = await LogErrorAsync(ex, "Todo", request);
+                var message = await LogErrorAsync(ex, "Audit Result Registration", request);
                 return Json(new HandleResponse<List<AuditTodoRow>>(false, message, null));
             }
         }

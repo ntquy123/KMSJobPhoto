@@ -4,6 +4,20 @@
         <name>erpsolution.api</name>
     </assembly>
     <members>
+        <member name="M:erpsolution.api.Controllers.KMSJobPhotoMobile.AuditResultRegistrationController.GetTodoList(erpsolution.entities.AmtTodoRequest)">
+            <param name="request">
+            Data input 
+            Example:
+            ```json
+            {
+              "FromDate": "2025-06-19",
+              "ToDate": "2026-12-31",
+              "Status": "ALL", //TODO,COMPLETED, ALL
+              "PlayerId": "20240340"
+            }
+            ```
+            </param>
+        </member>
         <member name="P:erpsolution.api.Base.BaseController.UserCreator">
             <summary>
             Username that authorized

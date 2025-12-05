@@ -232,7 +232,7 @@ namespace erpsolution.api
                             Array.Empty<string>()
                         }
                     });
-                   options.SwaggerDoc("fg_inventory_mobile", new OpenApiInfo { Title = "FG Inventory API", Version = "FG" });
+                   options.SwaggerDoc("kmsjobphoto_mobile", new OpenApiInfo { Title = "KMS Job Photo API", Version = "KMS" });
                    options.SwaggerDoc("systemmaster", new OpenApiInfo { Title = "API for System", Version = "SystemMaster" });
                });
 
