@@ -24,6 +24,7 @@ namespace erpsolution.dal.EF
         }
 
         public virtual DbSet<TCMUSMT> TCMUSMT { get; set; }
+        public virtual DbSet<AuditTodoRow> AuditTodoRows { get; set; }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (!optionsBuilder.IsConfigured)
@@ -34,6 +35,7 @@ namespace erpsolution.dal.EF
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<TCMUSMT>().HasNoKey();
+            modelBuilder.Entity<AuditTodoRow>().HasNoKey();
 
             OnModelCreatingPartial(modelBuilder);
         }
