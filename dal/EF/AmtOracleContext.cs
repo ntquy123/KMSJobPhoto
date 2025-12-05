@@ -25,6 +25,7 @@ namespace erpsolution.dal.EF
 
         public virtual DbSet<TCMUSMT> TCMUSMT { get; set; }
         public virtual DbSet<AuditTodoRow> AuditTodoRows { get; set; }
+        public virtual DbSet<ZmMasMobileVersions> ZmMasMobileVersions { get; set; }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (!optionsBuilder.IsConfigured)
@@ -36,7 +37,17 @@ namespace erpsolution.dal.EF
         {
             modelBuilder.Entity<TCMUSMT>().HasNoKey();
             modelBuilder.Entity<AuditTodoRow>().HasNoKey();
+            modelBuilder.Entity<ZmMasMobileVersions>(entity =>
+            {
+                entity.HasKey(e => e.VersionId);
+                entity.ToTable("ZM_MAS_MOBILE_VERSIONS");
 
+                entity.Property(e => e.VersionId).HasColumnName("VERSION_ID");
+                entity.Property(e => e.VersionName).HasColumnName("VERSION_NAME").HasMaxLength(50);
+                entity.Property(e => e.ReleaseDate).HasColumnName("RELEASE_DATE");
+                entity.Property(e => e.Description).HasColumnName("DESCRIPTION").HasMaxLength(255);
+                entity.Property(e => e.UseYn).HasColumnName("USEYN").HasMaxLength(1);
+            });
             OnModelCreatingPartial(modelBuilder);
         }
         partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
