@@ -11,7 +11,7 @@ namespace erpsolution.api.Helper
         {
 
             services.AddScoped<IAmtAuthService, AmtAuthService>();
-            services.AddScoped<IAmtTodoService, AmtTodoService>();
+            services.AddScoped<IAuditResultRegistrationService, AuditResultRegistrationService>();
             //Add Helper
             //   services.AddScoped<IExternalDatabaseQueries, ExternalDatabaseQueries>();
 

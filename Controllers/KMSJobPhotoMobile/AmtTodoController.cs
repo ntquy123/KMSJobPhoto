@@ -12,12 +12,12 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace erpsolution.api.Controllers.KMSJobPhotoMobile
 {
-    public class AmtTodoController : ControllerBaseEx<IAmtTodoService, AuditTodoRow, decimal>
+    public class AmtTodoController : ControllerBaseEx<IAuditResultRegistrationService, AuditTodoRow, decimal>
     {
         private readonly IApiExecutionLockService _ApiExcLockService;
 
         public AmtTodoController(
-            IAmtTodoService service,
+            IAuditResultRegistrationService service,
             IApiExecutionLockService ApiExcLockService,
             ICurrentUser currentUser) : base(service, currentUser)
         {

@@ -11,9 +11,9 @@ using service.Common.Base;
 
 namespace erpsolution.service.KMSJobPhotoMobile
 {
-    public class AmtTodoService : ServiceBase<AuditTodoRow>, IAmtTodoService
+    public class AuditResultRegistrationService : ServiceBase<AuditTodoRow>, IAuditResultRegistrationService
     {
-        public AmtTodoService(IServiceProvider serviceProvider) : base(serviceProvider)
+        public AuditResultRegistrationService(IServiceProvider serviceProvider) : base(serviceProvider)
         {
         }
 

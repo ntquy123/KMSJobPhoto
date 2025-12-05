@@ -5,7 +5,7 @@ using erpsolution.entities;
 
 namespace erpsolution.service.Interface
 {
-    public interface IAmtTodoService
+    public interface IAuditResultRegistrationService
     {
         new string PrimaryKey { get; }
 
