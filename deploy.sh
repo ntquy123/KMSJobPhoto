@@ -37,31 +37,30 @@ log_step() {
 # --- DRAW PROJECT HEADER ---
  
  
+ # ---  (FLOWER GARDEN HD) ---
 draw_header() {
     clear
     printf "\n"
-    printf "      ${B_BLACK}.;:${B_YELLOW}             ${B_BLACK}:;.${NC}\n"
-    printf "    ${B_BLACK}.::${B_YELLOW}\` \`...........' \`${B_BLACK}::.${NC}\n"
-    printf "   ${B_YELLOW}/::                 ::\\\\${NC}\n"
+    # Dòng 1: Đỉnh hoa
+    printf "    ${B_RED}     _ _      ${B_YELLOW}    .-.      ${B_MAGENTA}     ,      ${NC}\n"
+    printf "    ${B_RED}   _{ ' }_    ${B_YELLOW}   /   \     ${B_MAGENTA}    / \     ${NC}\n"
     
-
-    printf "  ${B_YELLOW}|::   ${B_BLACK}.'${B_YELLOW}     ${B_BLACK}'.${B_YELLOW}   ::|    ${B_MAGENTA}FGInventory${NC}\n"
-    printf "  ${B_YELLOW}|::  ${B_BLACK}.o.${B_YELLOW}     ${B_BLACK}.o.${B_YELLOW}  ::|    ${B_CYAN}Pika-Deploy${NC}\n"
+    # Dòng 2: Thân hoa + Tên dự án
+    printf "    ${B_RED}  { .'.'. }   ${B_YELLOW}  |  ${B_WHITE}o${B_YELLOW}  |     ${B_MAGENTA}   (   )    ${NC}  ${B_CYAN}KMS{NC}\n"
+    printf "    ${B_RED}   {  '  }    ${B_YELLOW}   \   /     ${B_MAGENTA}    \ /     ${NC}  ${B_GREEN}Nature Deploy${NC}\n"
     
-
-    printf "  ${B_YELLOW}|:: .${B_RED}(_)${B_YELLOW}.   .${B_RED}(_)${B_YELLOW}. ::|${NC}\n"
+    # Dòng 3: Đài hoa và Cành lá
+    printf "    ${B_RED}    \___/     ${B_YELLOW}    '-'      ${B_MAGENTA}     |      ${NC}\n"
+    printf "    ${B_GREEN}      |       ${B_GREEN}     |       ${B_GREEN}     |      ${NC}\n"
+    printf "    ${B_GREEN}    (\|/)     ${B_GREEN}   --|--     ${B_GREEN}   --|--    ${NC}\n"
+    printf "    ${B_GREEN}      |       ${B_GREEN}     |       ${B_GREEN}     |      ${NC}\n"
+    printf "    ${B_GREEN}      |       ${B_GREEN}    / \      ${B_GREEN}    /|\     ${NC}\n"
     
-
-    printf "   ${B_YELLOW}\::     \___/     ::/${NC}\n"
-    printf "    ${B_YELLOW}\::.           .::/${NC}\n"
-    printf "      ${B_YELLOW}\::._______ .::/${NC}\n"
-    printf "        ${B_YELLOW}\`':::::::''\`${NC}\n"
-    
-    printf "             ${B_YELLOW}_|__${NC}\n"
-    printf "            ${B_YELLOW}/ __/${NC}\n"
-    printf "           ${B_YELLOW}/ /${NC}\n"
+    # Dòng 4: Chậu hoa
+    printf "   ${B_WHITE} [===================================] ${NC}\n"
+    printf "   ${B_WHITE} \___________________________________/ ${NC}\n"
     printf "\n"
-    echo -e "${B_YELLOW}    Pika-Pika! Đang phóng điện khởi động server...${NC}\n"
+    echo -e "${B_MAGENTA}    🌸 Server đang nở hoa... À nhầm, đang khởi động! 🌸${NC}\n"
     sleep 1
 }
 
