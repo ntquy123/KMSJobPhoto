@@ -56,8 +56,21 @@ namespace erpsolution.api.Controllers.KMSJobPhotoMobile
 
         [ApiExplorerSettings(GroupName = "kmsjobphoto_mobile")]
         [HttpPost(nameof(UploadPhoto))]
+        [ProducesResponseType(typeof(HandleResponse<AuditResultPhotoUploadResponse>), 200)]
         [ProducesResponseType(typeof(HandleResponse<object>), 400)]
         [AllowAnonymous]
+        [Consumes("multipart/form-data")] // Good practice to specify content type
+
+        // Summary describes what the API does
+        /// <summary>
+        /// Uploads an evidence photo for a specific audit correction.
+        /// </summary>
+        /// <remarks>
+        /// **Usage Instructions:**
+        /// * Ensure the `AudplnNo` exists in the system.
+        /// * Supported file formats: .jpg, .png.
+        /// * Maximum file size: 5MB.
+        /// </remarks>
         public async Task<IActionResult> UploadPhoto([FromForm] AuditResultPhotoUploadRequest request)
         {
             try
