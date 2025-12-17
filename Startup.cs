@@ -232,10 +232,11 @@ namespace erpsolution.api
                             Array.Empty<string>()
                         }
                     });
+                   options.MapType<IFormFile>(() => new OpenApiSchema { Type = "string", Format = "binary" });
                    options.SwaggerDoc("kmsjobphoto_mobile", new OpenApiInfo { Title = "KMS Job Photo API", Version = "KMS" });
                    options.SwaggerDoc("systemmaster", new OpenApiInfo { Title = "API for System", Version = "SystemMaster" });
                });
-
+           
 
             services.AddSingleton(provider => Configuration);
 

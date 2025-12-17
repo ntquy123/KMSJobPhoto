@@ -45,7 +45,7 @@ namespace erpsolution.entities
         /// The image files to prove the corrective action (combined size checked on FE).
         /// </summary>
         [Required]
-        [DataType(DataType.Upload)] // Renders a file upload button in Swagger
+        //[DataType(DataType.Upload)] // Renders a file upload button in Swagger
         public List<IFormFile> Photos { get; set; } = new();
     }
 }
