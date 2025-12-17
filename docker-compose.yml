@@ -13,6 +13,10 @@ services:
     # publish the API directly so the existing proxy can route to it.
     ports:
       - "8083:8083"
+    volumes:
+      # Bind host upload storage so the app can persist uploaded files without code changes
+      - /home/data/PKKMS/upload:/home/data/PKKMS/upload
+      - ./upload:/upload
     restart: always
 
   # nginx:

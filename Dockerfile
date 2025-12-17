@@ -24,6 +24,9 @@ WORKDIR /app
 # Configure ASP.NET Core to listen on port 8083
 ENV ASPNETCORE_URLS=http://+:8083
 
+# Ensure upload directories exist so bind mounts have predictable targets
+RUN mkdir -p /home/data/PKKMS/upload/audit/img /upload
+
 # Copy the published output from the build stage
 COPY --from=build /app/publish .
 
