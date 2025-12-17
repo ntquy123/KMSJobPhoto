@@ -54,6 +54,31 @@ namespace erpsolution.api.Controllers.KMSJobPhotoMobile
             }
         }
 
+        [ApiExplorerSettings(GroupName = "kmsjobphoto_mobile")]
+        [HttpPost(nameof(UploadPhoto))]
+        [ProducesResponseType(typeof(HandleResponse<object>), 400)]
+        [AllowAnonymous]
+        public async Task<IActionResult> UploadPhoto([FromForm] AuditResultPhotoUploadRequest request)
+        {
+            try
+            {
+                var result = await _service.UploadPhotoAsync(request);
+                return Ok(new HandleResponse<AuditResultPhotoUploadResponse>(true, string.Empty, result, null));
+            }
+            catch (Exception ex)
+            {
+                var message = await LogErrorAsync(ex, "Audit Result Registration", new
+                {
+                    request.AudplnNo,
+                    request.Catcode,
+                    request.CorrectionNo,
+                    request.CorrectiveAction,
+                    request.PhotoDescription
+                });
+                return Json(new HandleResponse<AuditResultPhotoUploadResponse>(false, message, null));
+            }
+        }
+
         private async Task<string> LogErrorAsync(Exception ex, string menuName, object vm = null)
         {
             string currentUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}{HttpContext.Request.QueryString}";

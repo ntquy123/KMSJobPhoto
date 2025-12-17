@@ -10,5 +10,7 @@ namespace erpsolution.service.Interface
         new string PrimaryKey { get; }
 
         Task<List<AuditTodoRow>> GetTodoListAsync(AmtTodoRequest request);
+
+        Task<AuditResultPhotoUploadResponse> UploadPhotoAsync(AuditResultPhotoUploadRequest request);
     }
 }

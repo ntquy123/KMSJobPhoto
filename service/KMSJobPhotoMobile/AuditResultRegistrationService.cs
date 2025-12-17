@@ -1,11 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using erpsolution.dal.EF;
 using erpsolution.entities;
 using erpsolution.service.Interface;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Oracle.ManagedDataAccess.Client;
 using service.Common.Base;
 
@@ -18,6 +22,8 @@ namespace erpsolution.service.KMSJobPhotoMobile
         }
 
         public override string PrimaryKey => string.Empty;
+
+        private const string AuditImageRootPath = "/home/data/PKKMS/upload/audit/img";
 
         public async Task<List<AuditTodoRow>> GetTodoListAsync(AmtTodoRequest request)
         {
@@ -83,6 +89,49 @@ ORDER BY PLNDTL.TARGET_DATE
             return rows;
         }
 
+        public async Task<AuditResultPhotoUploadResponse> UploadPhotoAsync(AuditResultPhotoUploadRequest request)
+        {
+            if (request.Photo == null || request.Photo.Length == 0)
+            {
+                throw new ArgumentException("Photo is required", nameof(request.Photo));
+            }
+
+            var folderName = $"{request.AudplnNo}-{request.Catcode}-{request.CorrectionNo}";
+            var folderPath = Path.Combine(AuditImageRootPath, folderName);
+            Directory.CreateDirectory(folderPath);
+
+            var fileName = GenerateUniqueFileName(request.Photo.FileName);
+            var filePath = Path.Combine(folderPath, fileName);
+            await SaveFileAsync(request.Photo, filePath);
+
+            IDbContextTransaction? transaction = null;
+            try
+            {
+                transaction = await _amtContext.Database.BeginTransactionAsync();
+                var response = await SavePhotoMetadataAsync(request, fileName, folderName);
+                await transaction.CommitAsync();
+                return response;
+            }
+            catch
+            {
+                if (transaction != null)
+                {
+                    await transaction.RollbackAsync();
+                }
+
+                if (File.Exists(filePath))
+                {
+                    File.Delete(filePath);
+                }
+
+                throw;
+            }
+            finally
+            {
+                transaction?.Dispose();
+            }
+        }
+
         private string NormalizeStatus(string status)
         {
             if (string.IsNullOrWhiteSpace(status))
@@ -100,6 +149,91 @@ ORDER BY PLNDTL.TARGET_DATE
                 default:
                     return "ALL";
             }
+        }
+
+        private async Task<AuditResultPhotoUploadResponse> SavePhotoMetadataAsync(AuditResultPhotoUploadRequest request, string storedFileName, string folderName)
+        {
+            var auditResult = await _amtContext.KmsAudresMsts
+                .FirstOrDefaultAsync(x =>
+                    x.AudplnNo == request.AudplnNo &&
+                    x.Catcode == request.Catcode &&
+                    x.CorrectionNo == request.CorrectionNo);
+
+            if (auditResult == null)
+            {
+                throw new InvalidOperationException("Audit result not found for the provided keys.");
+            }
+
+            var currentUser = _currentUser?.UserName ?? "SYSTEM";
+            var now = DateTime.Now;
+
+            auditResult.CorrectiveAction = request.CorrectiveAction;
+            auditResult.CorrectedDate = now;
+            auditResult.Uptid = currentUser;
+            auditResult.Uptdate = now;
+
+            var nextSeq = await GetNextPhotoSequenceAsync(request);
+            var relativePath = Path.Combine(folderName, storedFileName).Replace("\\", "/");
+            var photoEntity = new KmsAudresPho
+            {
+                AudplnNo = request.AudplnNo,
+                Catcode = request.Catcode,
+                CorrectionNo = request.CorrectionNo,
+                PhoSeq = nextSeq,
+                PhoFile = storedFileName,
+                PhoName = request.Photo.FileName,
+                PhoSize = request.Photo.Length,
+                PhoLink = relativePath,
+                PhoDesc = request.PhotoDescription,
+                Crtid = currentUser,
+                Crtdate = now,
+                Uptid = currentUser,
+                Uptdate = now
+            };
+
+            _amtContext.KmsAudresPhos.Add(photoEntity);
+            await _amtContext.SaveChangesAsync();
+
+            return new AuditResultPhotoUploadResponse
+            {
+                AudplnNo = request.AudplnNo,
+                Catcode = request.Catcode,
+                CorrectionNo = request.CorrectionNo,
+                PhotoSeq = nextSeq,
+                FileName = storedFileName,
+                FileLink = relativePath,
+                PhotoDescription = request.PhotoDescription,
+                UploadedAt = now
+            };
+        }
+
+        private async Task<decimal> GetNextPhotoSequenceAsync(AuditResultPhotoUploadRequest request)
+        {
+            var currentMax = await _amtContext.KmsAudresPhos
+                .Where(x => x.AudplnNo == request.AudplnNo &&
+                            x.Catcode == request.Catcode &&
+                            x.CorrectionNo == request.CorrectionNo)
+                .MaxAsync(x => (decimal?)x.PhoSeq);
+
+            return (currentMax ?? 0) + 1;
+        }
+
+        private static async Task SaveFileAsync(IFormFile file, string path)
+        {
+            await using var stream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
+            await file.CopyToAsync(stream);
+        }
+
+        private static string GenerateUniqueFileName(string originalFileName)
+        {
+            var extension = Path.GetExtension(originalFileName);
+            var safeName = Path.GetFileNameWithoutExtension(originalFileName);
+            foreach (var invalidChar in Path.GetInvalidFileNameChars())
+            {
+                safeName = safeName.Replace(invalidChar, '_');
+            }
+
+            return $"{safeName}_{DateTime.Now:yyyyMMddHHmmssfff}{extension}";
         }
     }
 }
