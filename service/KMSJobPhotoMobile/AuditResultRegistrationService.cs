@@ -10,6 +10,7 @@ using erpsolution.service.Interface;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.Configuration;
 using Oracle.ManagedDataAccess.Client;
 using service.Common.Base;
 
@@ -17,13 +18,16 @@ namespace erpsolution.service.KMSJobPhotoMobile
 {
     public class AuditResultRegistrationService : ServiceBase<AuditTodoRow>, IAuditResultRegistrationService
     {
+        private readonly string _auditImageRootPath;
+
         public AuditResultRegistrationService(IServiceProvider serviceProvider) : base(serviceProvider)
         {
+            var configuration = (IConfiguration?)serviceProvider.GetService(typeof(IConfiguration));
+            _auditImageRootPath = configuration?.GetValue<string>("AppSettings:AuditImageRootPath")
+                                 ?? throw new InvalidOperationException("Audit image root path is not configured.");
         }
 
         public override string PrimaryKey => string.Empty;
-
-        private const string AuditImageRootPath = "/home/data/PKKMS/upload/audit/img";
 
         public async Task<List<AuditTodoRow>> GetTodoListAsync(AmtTodoRequest request)
         {
@@ -97,7 +101,7 @@ ORDER BY PLNDTL.TARGET_DATE
             }
 
             var folderName = $"{request.AudplnNo}-{request.Catcode}-{request.CorrectionNo}";
-            var folderPath = Path.Combine(AuditImageRootPath, folderName);
+            var folderPath = Path.Combine(_auditImageRootPath, folderName);
             Directory.CreateDirectory(folderPath);
 
             var savedFiles = new List<(string FilePath, string StoredFileName, IFormFile File)>();

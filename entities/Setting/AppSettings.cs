@@ -11,6 +11,7 @@ namespace entities.Setting
         public string Surfix { get; set; }
         public string UploadRootPath { get; set; }
         public string UploadRootDomain { get; set; }
+        public string AuditImageRootPath { get; set; }
         public List<string> WareHouse { get; set; }
         public string ServerCountry { get; set; }
         public List<string> Factory { get; set; }
