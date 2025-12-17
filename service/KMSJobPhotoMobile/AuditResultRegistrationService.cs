@@ -89,26 +89,31 @@ ORDER BY PLNDTL.TARGET_DATE
             return rows;
         }
 
-        public async Task<AuditResultPhotoUploadResponse> UploadPhotoAsync(AuditResultPhotoUploadRequest request)
+        public async Task<List<AuditResultPhotoUploadResponse>> UploadPhotoAsync(AuditResultPhotoUploadRequest request)
         {
-            if (request.Photo == null || request.Photo.Length == 0)
+            if (request.Photos == null || !request.Photos.Any())
             {
-                throw new ArgumentException("Photo is required", nameof(request.Photo));
+                throw new ArgumentException("At least one photo is required", nameof(request.Photos));
             }
 
             var folderName = $"{request.AudplnNo}-{request.Catcode}-{request.CorrectionNo}";
             var folderPath = Path.Combine(AuditImageRootPath, folderName);
             Directory.CreateDirectory(folderPath);
 
-            var fileName = GenerateUniqueFileName(request.Photo.FileName);
-            var filePath = Path.Combine(folderPath, fileName);
-            await SaveFileAsync(request.Photo, filePath);
-
+            var savedFiles = new List<(string FilePath, string StoredFileName, IFormFile File)>();
             IDbContextTransaction? transaction = null;
             try
             {
+                foreach (var photo in request.Photos)
+                {
+                    var storedFileName = GenerateDateBasedFileName(photo.FileName);
+                    var filePath = Path.Combine(folderPath, storedFileName);
+                    await SaveFileAsync(photo, filePath);
+                    savedFiles.Add((filePath, storedFileName, photo));
+                }
+
                 transaction = await _amtContext.Database.BeginTransactionAsync();
-                var response = await SavePhotoMetadataAsync(request, fileName, folderName);
+                var response = await SavePhotoMetadataAsync(request, folderName, savedFiles);
                 await transaction.CommitAsync();
                 return response;
             }
@@ -119,9 +124,12 @@ ORDER BY PLNDTL.TARGET_DATE
                     await transaction.RollbackAsync();
                 }
 
-                if (File.Exists(filePath))
+                foreach (var file in savedFiles)
                 {
-                    File.Delete(filePath);
+                    if (File.Exists(file.FilePath))
+                    {
+                        File.Delete(file.FilePath);
+                    }
                 }
 
                 throw;
@@ -151,7 +159,10 @@ ORDER BY PLNDTL.TARGET_DATE
             }
         }
 
-        private async Task<AuditResultPhotoUploadResponse> SavePhotoMetadataAsync(AuditResultPhotoUploadRequest request, string storedFileName, string folderName)
+        private async Task<List<AuditResultPhotoUploadResponse>> SavePhotoMetadataAsync(
+            AuditResultPhotoUploadRequest request,
+            string folderName,
+            List<(string FilePath, string StoredFileName, IFormFile File)> savedFiles)
         {
             var auditResult = await _amtContext.KmsAudresMsts
                 .FirstOrDefaultAsync(x =>
@@ -173,38 +184,47 @@ ORDER BY PLNDTL.TARGET_DATE
             auditResult.Uptdate = now;
 
             var nextSeq = await GetNextPhotoSequenceAsync(request);
-            var relativePath = Path.Combine(folderName, storedFileName).Replace("\\", "/");
-            var photoEntity = new KmsAudresPho
+            var responses = new List<AuditResultPhotoUploadResponse>();
+            foreach (var savedFile in savedFiles)
             {
-                AudplnNo = request.AudplnNo,
-                Catcode = request.Catcode,
-                CorrectionNo = request.CorrectionNo,
-                PhoSeq = nextSeq,
-                PhoFile = storedFileName,
-                PhoName = request.Photo.FileName,
-                PhoSize = request.Photo.Length,
-                PhoLink = relativePath,
-                PhoDesc = request.PhotoDescription,
-                Crtid = currentUser,
-                Crtdate = now,
-                Uptid = currentUser,
-                Uptdate = now
-            };
+                var relativePath = Path.Combine(folderName, savedFile.StoredFileName).Replace("\\", "/");
+                var photoEntity = new KmsAudresPho
+                {
+                    AudplnNo = request.AudplnNo,
+                    Catcode = request.Catcode,
+                    CorrectionNo = request.CorrectionNo,
+                    PhoSeq = nextSeq,
+                    PhoFile = savedFile.StoredFileName,
+                    PhoName = savedFile.File.FileName,
+                    PhoSize = savedFile.File.Length,
+                    PhoLink = relativePath,
+                    PhoDesc = request.PhotoDescription,
+                    Crtid = currentUser,
+                    Crtdate = now,
+                    Uptid = currentUser,
+                    Uptdate = now
+                };
 
-            _amtContext.KmsAudresPhos.Add(photoEntity);
+                _amtContext.KmsAudresPhos.Add(photoEntity);
+
+                responses.Add(new AuditResultPhotoUploadResponse
+                {
+                    AudplnNo = request.AudplnNo,
+                    Catcode = request.Catcode,
+                    CorrectionNo = request.CorrectionNo,
+                    PhotoSeq = nextSeq,
+                    FileName = savedFile.StoredFileName,
+                    FileLink = relativePath,
+                    PhotoDescription = request.PhotoDescription,
+                    UploadedAt = now
+                });
+
+                nextSeq++;
+            }
+
             await _amtContext.SaveChangesAsync();
 
-            return new AuditResultPhotoUploadResponse
-            {
-                AudplnNo = request.AudplnNo,
-                Catcode = request.Catcode,
-                CorrectionNo = request.CorrectionNo,
-                PhotoSeq = nextSeq,
-                FileName = storedFileName,
-                FileLink = relativePath,
-                PhotoDescription = request.PhotoDescription,
-                UploadedAt = now
-            };
+            return responses;
         }
 
         private async Task<decimal> GetNextPhotoSequenceAsync(AuditResultPhotoUploadRequest request)
@@ -224,16 +244,12 @@ ORDER BY PLNDTL.TARGET_DATE
             await file.CopyToAsync(stream);
         }
 
-        private static string GenerateUniqueFileName(string originalFileName)
+        private static string GenerateDateBasedFileName(string originalFileName)
         {
             var extension = Path.GetExtension(originalFileName);
-            var safeName = Path.GetFileNameWithoutExtension(originalFileName);
-            foreach (var invalidChar in Path.GetInvalidFileNameChars())
-            {
-                safeName = safeName.Replace(invalidChar, '_');
-            }
-
-            return $"{safeName}_{DateTime.Now:yyyyMMddHHmmssfff}{extension}";
+            var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmssfff");
+            var randomSuffix = Guid.NewGuid().ToString("N")[..8];
+            return $"{timestamp}_{randomSuffix}{extension}";
         }
     }
 }

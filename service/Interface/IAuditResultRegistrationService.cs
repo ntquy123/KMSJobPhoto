@@ -11,6 +11,6 @@ namespace erpsolution.service.Interface
 
         Task<List<AuditTodoRow>> GetTodoListAsync(AmtTodoRequest request);
 
-        Task<AuditResultPhotoUploadResponse> UploadPhotoAsync(AuditResultPhotoUploadRequest request);
+        Task<List<AuditResultPhotoUploadResponse>> UploadPhotoAsync(AuditResultPhotoUploadRequest request);
     }
 }

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Http;
@@ -31,7 +32,7 @@ namespace erpsolution.entities
         /// Description of the action taken to resolve the issue.
         /// </summary>
         [Required]
-        [DefaultValue("I’ve cleaned it properly")] // Swagger will pre-fill this value
+        [DefaultValue("I've cleaned it properly")] // Swagger will pre-fill this value
         public string CorrectiveAction { get; set; } = string.Empty;
 
         /// <summary>
@@ -41,10 +42,10 @@ namespace erpsolution.entities
         public string? PhotoDescription { get; set; }
 
         /// <summary>
-        /// The image file to prove the corrective action (Max 5MB).
+        /// The image files to prove the corrective action (combined size checked on FE).
         /// </summary>
         [Required]
         [DataType(DataType.Upload)] // Renders a file upload button in Swagger
-        public IFormFile Photo { get; set; } = default!;
+        public List<IFormFile> Photos { get; set; } = new();
     }
 }

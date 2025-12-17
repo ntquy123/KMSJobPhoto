@@ -56,27 +56,28 @@ namespace erpsolution.api.Controllers.KMSJobPhotoMobile
 
         [ApiExplorerSettings(GroupName = "kmsjobphoto_mobile")]
         [HttpPost(nameof(UploadPhoto))]
-        [ProducesResponseType(typeof(HandleResponse<AuditResultPhotoUploadResponse>), 200)]
+        [ProducesResponseType(typeof(HandleResponse<List<AuditResultPhotoUploadResponse>>), 200)]
         [ProducesResponseType(typeof(HandleResponse<object>), 400)]
         [AllowAnonymous]
         [Consumes("multipart/form-data")] // Good practice to specify content type
 
         // Summary describes what the API does
         /// <summary>
-        /// Uploads an evidence photo for a specific audit correction.
+        /// Uploads one or more evidence photos for a specific audit correction.
         /// </summary>
         /// <remarks>
         /// **Usage Instructions:**
         /// * Ensure the `AudplnNo` exists in the system.
         /// * Supported file formats: .jpg, .png.
-        /// * Maximum file size: 5MB.
+        /// * Provide photos as `Photos[]` in form-data.
+        /// * Maximum total file size: 300MB (validated on client side).
         /// </remarks>
         public async Task<IActionResult> UploadPhoto([FromForm] AuditResultPhotoUploadRequest request)
         {
             try
             {
                 var result = await _service.UploadPhotoAsync(request);
-                return Ok(new HandleResponse<AuditResultPhotoUploadResponse>(true, string.Empty, result, null));
+                return Ok(new HandleResponse<List<AuditResultPhotoUploadResponse>>(true, string.Empty, result, null));
             }
             catch (Exception ex)
             {
@@ -88,7 +89,7 @@ namespace erpsolution.api.Controllers.KMSJobPhotoMobile
                     request.CorrectiveAction,
                     request.PhotoDescription
                 });
-                return Json(new HandleResponse<AuditResultPhotoUploadResponse>(false, message, null));
+                return Json(new HandleResponse<List<AuditResultPhotoUploadResponse>>(false, message, null));
             }
         }
 
