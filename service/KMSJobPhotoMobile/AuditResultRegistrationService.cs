@@ -186,7 +186,8 @@ ORDER BY PLNDTL.TARGET_DATE
             auditResult.CorrectedDate = now;
             auditResult.Uptid = currentUser;
             auditResult.Uptdate = now;
-
+            _amtContext.KmsAudresMsts.Update(auditResult);
+            await _amtContext.SaveChangesAsync();
             var nextSeq = await GetNextPhotoSequenceAsync(request);
             var responses = new List<AuditResultPhotoUploadResponse>();
             foreach (var savedFile in savedFiles)
