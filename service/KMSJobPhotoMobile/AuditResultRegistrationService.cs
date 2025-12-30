@@ -179,12 +179,12 @@ ORDER BY PLNDTL.TARGET_DATE
                 throw new InvalidOperationException("Audit result not found for the provided keys.");
             }
 
-            //var currentUser = _currentUser?.UserName ?? "SYSTEM";
+            var currentUser = _currentUser.UserId.ToString();
             var now = DateTime.Now;
 
             auditResult.CorrectiveAction = request.CorrectiveAction;
             auditResult.CorrectedDate = now;
-            auditResult.Uptid = "SYSTEM";
+            auditResult.Uptid = currentUser;
             auditResult.Uptdate = now;
             _amtContext.KmsAudresMsts.Update(auditResult);
             await _amtContext.SaveChangesAsync();
@@ -204,9 +204,9 @@ ORDER BY PLNDTL.TARGET_DATE
                     PhoSize = savedFile.File.Length,
                     PhoLink = relativePath,
                     PhoDesc = request.PhotoDescription,
-                    Crtid = "SYSTEM",
+                    Crtid = currentUser,
                     Crtdate = now,
-                    Uptid = "SYSTEM",
+                    Uptid = currentUser,
                     Uptdate = now
                 };
 

@@ -58,7 +58,6 @@ namespace erpsolution.api.Controllers.KMSJobPhotoMobile
         [HttpPost(nameof(UploadPhoto))]
         [ProducesResponseType(typeof(HandleResponse<List<AuditResultPhotoUploadResponse>>), 200)]
         [ProducesResponseType(typeof(HandleResponse<object>), 400)]
-        [AllowAnonymous]
         [Consumes("multipart/form-data")] // Good practice to specify content type
 
         // Summary describes what the API does
