@@ -22,6 +22,8 @@ namespace erpsolution.dal.EF
 
         public string? PhoDesc { get; set; }
 
+        public string? PhoDevice { get; set; }
+
         public string? Crtid { get; set; }
 
         public DateTime? Crtdate { get; set; }

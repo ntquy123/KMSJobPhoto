@@ -18,6 +18,10 @@ namespace erpsolution.service.KMSJobPhotoMobile
 {
     public class AuditResultRegistrationService : ServiceBase<AuditTodoRow>, IAuditResultRegistrationService
     {
+        private const string DefaultPhotoName = "imagename.jpg";
+        private const string PhotoDeviceMobile = "MOBILE";
+        private static readonly object TimestampLock = new();
+        private static long _lastUnixTimestampMs;
         private readonly string _auditImageRootPath;
 
         public AuditResultRegistrationService(IServiceProvider serviceProvider) : base(serviceProvider)
@@ -110,7 +114,7 @@ ORDER BY PLNDTL.TARGET_DATE
             {
                 foreach (var photo in request.Photos)
                 {
-                    var storedFileName = GenerateDateBasedFileName(photo.FileName);
+                    var storedFileName = GenerateUniqueTimestampFileName(photo.FileName);
                     var filePath = Path.Combine(folderPath, storedFileName);
                     await SaveFileAsync(photo, filePath);
                     savedFiles.Add((filePath, storedFileName, photo));
@@ -192,7 +196,7 @@ ORDER BY PLNDTL.TARGET_DATE
             var responses = new List<AuditResultPhotoUploadResponse>();
             foreach (var savedFile in savedFiles)
             {
-                var relativePath = Path.Combine(folderName, savedFile.StoredFileName).Replace("\\", "/");
+                var photoLink = Path.Combine(_auditImageRootPath, folderName).Replace("\\", "/");
                 var photoEntity = new KmsAudresPho
                 {
                     AudplnNo = request.AudplnNo,
@@ -200,10 +204,11 @@ ORDER BY PLNDTL.TARGET_DATE
                     CorrectionNo = request.CorrectionNo,
                     PhoSeq = nextSeq,
                     PhoFile = savedFile.StoredFileName,
-                    PhoName = savedFile.File.FileName,
+                    PhoName = DefaultPhotoName,
                     PhoSize = savedFile.File.Length,
-                    PhoLink = relativePath,
+                    PhoLink = photoLink,
                     PhoDesc = request.PhotoDescription,
+                    PhoDevice = PhotoDeviceMobile,
                     Crtid = currentUser,
                     Crtdate = now,
                     Uptid = currentUser,
@@ -219,7 +224,7 @@ ORDER BY PLNDTL.TARGET_DATE
                     CorrectionNo = request.CorrectionNo,
                     PhotoSeq = nextSeq,
                     FileName = savedFile.StoredFileName,
-                    FileLink = relativePath,
+                    FileLink = photoLink,
                     PhotoDescription = request.PhotoDescription,
                     UploadedAt = now
                 });
@@ -249,12 +254,26 @@ ORDER BY PLNDTL.TARGET_DATE
             await file.CopyToAsync(stream);
         }
 
-        private static string GenerateDateBasedFileName(string originalFileName)
+        private static string GenerateUniqueTimestampFileName(string originalFileName)
         {
             var extension = Path.GetExtension(originalFileName);
-            var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmssfff");
-            var randomSuffix = Guid.NewGuid().ToString("N")[..8];
-            return $"{timestamp}_{randomSuffix}{extension}";
+            var timestamp = GenerateUniqueUnixTimestampMs();
+            return $"FILE_{timestamp}{extension}";
+        }
+
+        private static long GenerateUniqueUnixTimestampMs()
+        {
+            var current = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            lock (TimestampLock)
+            {
+                if (current <= _lastUnixTimestampMs)
+                {
+                    current = _lastUnixTimestampMs + 1;
+                }
+
+                _lastUnixTimestampMs = current;
+                return current;
+            }
         }
     }
 }

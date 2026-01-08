@@ -84,6 +84,7 @@ namespace erpsolution.dal.EF
                 entity.Property(e => e.PhoSize).HasColumnName("PHO_SIZE");
                 entity.Property(e => e.PhoLink).HasColumnName("PHO_LINK").HasMaxLength(1000).IsUnicode(false);
                 entity.Property(e => e.PhoDesc).HasColumnName("PHO_DESC").HasMaxLength(1000).IsUnicode(false);
+                entity.Property(e => e.PhoDevice).HasColumnName("PHO_DEVICE").HasMaxLength(50).IsUnicode(false);
                 entity.Property(e => e.Crtid).HasColumnName("CRTID").HasMaxLength(8).IsUnicode(false);
                 entity.Property(e => e.Crtdate).HasColumnName("CRTDATE");
                 entity.Property(e => e.Uptid).HasColumnName("UPTID").HasMaxLength(8).IsUnicode(false);
