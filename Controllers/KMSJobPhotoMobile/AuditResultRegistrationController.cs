@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using entities.Common;
 using erpsolution.api.Base;
@@ -75,7 +76,7 @@ namespace erpsolution.api.Controllers.KMSJobPhotoMobile
         {
             try
             {
-                var result = await _service.UploadPhotoAsync(request);
+                var result = await _service.UploadPhotoAsync(request, GetAuditImageBaseUrl());
                 return Ok(new HandleResponse<List<AuditResultPhotoUploadResponse>>(true, string.Empty, result, null));
             }
             catch (Exception ex)
@@ -100,7 +101,7 @@ namespace erpsolution.api.Controllers.KMSJobPhotoMobile
         {
             try
             {
-                var result = await _service.GetPhotoListAsync(request);
+                var result = await _service.GetPhotoListAsync(request, GetAuditImageBaseUrl());
                 return Ok(new HandleResponse<List<AuditResultPhotoListResponse>>(true, string.Empty, result, null));
             }
             catch (Exception ex)
@@ -126,6 +127,16 @@ namespace erpsolution.api.Controllers.KMSJobPhotoMobile
             };
             var log = await _ApiExcLockService.SaveLogError(modelAdd);
             return "Error ID:" + log.LogId + ": " + ex.Message;
+        }
+
+        private string GetAuditImageBaseUrl()
+        {
+            var forwardedProto = Request.Headers["X-Forwarded-Proto"].FirstOrDefault();
+            var forwardedHost = Request.Headers["X-Forwarded-Host"].FirstOrDefault();
+            var scheme = string.IsNullOrWhiteSpace(forwardedProto) ? Request.Scheme : forwardedProto;
+            var host = string.IsNullOrWhiteSpace(forwardedHost) ? Request.Host.Value : forwardedHost;
+
+            return $"{scheme}://{host}/audit/img";
         }
     }
 }
