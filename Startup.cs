@@ -266,6 +266,16 @@ namespace erpsolution.api
                 });
             }
 
+            if (!string.IsNullOrWhiteSpace(appSettings.AuditImageRootPath) &&
+                Directory.Exists(appSettings.AuditImageRootPath))
+            {
+                app.UseStaticFiles(new StaticFileOptions
+                {
+                    FileProvider = new PhysicalFileProvider(appSettings.AuditImageRootPath),
+                    RequestPath = "/audit/img"
+                });
+            }
+
             //app.UseForwardedHeaders();
             //loggerFactory.AddConsole(Configuration.GetSection("Logging"));
             //loggerFactory.AddDebug();
