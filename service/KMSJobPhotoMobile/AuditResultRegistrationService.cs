@@ -23,12 +23,14 @@ namespace erpsolution.service.KMSJobPhotoMobile
         private static readonly object TimestampLock = new();
         private static long _lastUnixTimestampMs;
         private readonly string _auditImageRootPath;
+        private readonly string _auditImageBaseUrl;
 
         public AuditResultRegistrationService(IServiceProvider serviceProvider) : base(serviceProvider)
         {
             var configuration = (IConfiguration?)serviceProvider.GetService(typeof(IConfiguration));
             _auditImageRootPath = configuration?.GetValue<string>("AppSettings:AuditImageRootPath")
                                  ?? throw new InvalidOperationException("Audit image root path is not configured.");
+            _auditImageBaseUrl = configuration?.GetValue<string>("AppSettings:AuditImageBaseUrl") ?? string.Empty;
         }
 
         public override string PrimaryKey => string.Empty;
@@ -197,6 +199,7 @@ ORDER BY PLNDTL.TARGET_DATE
             foreach (var savedFile in savedFiles)
             {
                 var photoLink = Path.Combine(_auditImageRootPath, folderName).Replace("\\", "/");
+                var photoUrl = BuildPhotoUrl(folderName, savedFile.StoredFileName);
                 var photoEntity = new KmsAudresPho
                 {
                     AudplnNo = request.AudplnNo,
@@ -224,7 +227,7 @@ ORDER BY PLNDTL.TARGET_DATE
                     CorrectionNo = request.CorrectionNo,
                     PhotoSeq = nextSeq,
                     FileName = savedFile.StoredFileName,
-                    FileLink = photoLink,
+                    FileLink = photoUrl,
                     PhotoDescription = request.PhotoDescription,
                     UploadedAt = now
                 });
@@ -235,6 +238,32 @@ ORDER BY PLNDTL.TARGET_DATE
             await _amtContext.SaveChangesAsync();
 
             return responses;
+        }
+
+        public async Task<List<AuditResultPhotoListResponse>> GetPhotoListAsync(AuditResultPhotoListRequest request)
+        {
+            var photos = await _amtContext.KmsAudresPhos
+                .Where(x => x.AudplnNo == request.AudplnNo &&
+                            x.Catcode == request.Catcode &&
+                            x.CorrectionNo == request.CorrectionNo)
+                .OrderBy(x => x.PhoSeq)
+                .ToListAsync();
+
+            var folderName = $"{request.AudplnNo}-{request.Catcode}-{request.CorrectionNo}";
+            return photos
+                .Where(x => !string.IsNullOrWhiteSpace(x.PhoFile))
+                .Select(x => new AuditResultPhotoListResponse
+                {
+                    AudplnNo = request.AudplnNo,
+                    Catcode = request.Catcode,
+                    CorrectionNo = request.CorrectionNo,
+                    PhotoSeq = x.PhoSeq,
+                    FileName = x.PhoFile ?? string.Empty,
+                    PhotoUrl = BuildPhotoUrl(folderName, x.PhoFile ?? string.Empty),
+                    PhotoDescription = x.PhoDesc,
+                    UploadedAt = x.Crtdate
+                })
+                .ToList();
         }
 
         private async Task<decimal> GetNextPhotoSequenceAsync(AuditResultPhotoUploadRequest request)
@@ -252,6 +281,21 @@ ORDER BY PLNDTL.TARGET_DATE
         {
             await using var stream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
             await file.CopyToAsync(stream);
+        }
+
+        private string BuildPhotoUrl(string folderName, string fileName)
+        {
+            if (string.IsNullOrWhiteSpace(fileName))
+            {
+                return string.Empty;
+            }
+
+            if (string.IsNullOrWhiteSpace(_auditImageBaseUrl))
+            {
+                return Path.Combine(_auditImageRootPath, folderName, fileName).Replace("\\", "/");
+            }
+
+            return $"{_auditImageBaseUrl.TrimEnd('/')}/{folderName}/{fileName}";
         }
 
         private static string GenerateUniqueTimestampFileName(string originalFileName)

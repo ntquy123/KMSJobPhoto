@@ -92,6 +92,24 @@ namespace erpsolution.api.Controllers.KMSJobPhotoMobile
             }
         }
 
+        [ApiExplorerSettings(GroupName = "kmsjobphoto_mobile")]
+        [HttpGet(nameof(GetPhotoList))]
+        [ProducesResponseType(typeof(HandleResponse<List<AuditResultPhotoListResponse>>), 200)]
+        [ProducesResponseType(typeof(HandleResponse<object>), 400)]
+        public async Task<IActionResult> GetPhotoList([FromQuery] AuditResultPhotoListRequest request)
+        {
+            try
+            {
+                var result = await _service.GetPhotoListAsync(request);
+                return Ok(new HandleResponse<List<AuditResultPhotoListResponse>>(true, string.Empty, result, null));
+            }
+            catch (Exception ex)
+            {
+                var message = await LogErrorAsync(ex, "Audit Result Registration", request);
+                return Json(new HandleResponse<List<AuditResultPhotoListResponse>>(false, message, null));
+            }
+        }
+
         private async Task<string> LogErrorAsync(Exception ex, string menuName, object vm = null)
         {
             string currentUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}{HttpContext.Request.QueryString}";
