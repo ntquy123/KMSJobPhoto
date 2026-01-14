@@ -12,6 +12,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Configuration;
 using Oracle.ManagedDataAccess.Client;
+using Renci.SshNet;
 using service.Common.Base;
 
 namespace erpsolution.service.KMSJobPhotoMobile
@@ -20,6 +21,10 @@ namespace erpsolution.service.KMSJobPhotoMobile
     {
         private const string DefaultPhotoName = "imagename.jpg";
         private const string PhotoDeviceMobile = "MOBILE";
+        private const string SftpHost = "10.10.1.208";
+        private const string SftpUser = "pkuser";
+        private const string SftpPassword = "1234@@";
+        private const string SftpRootPath = "/home/pkuser/kmsjobphoto";
         private static readonly object TimestampLock = new();
         private static long _lastUnixTimestampMs;
         private readonly string _auditImageRootPath;
@@ -107,23 +112,46 @@ ORDER BY PLNDTL.TARGET_DATE
             }
 
             var folderName = $"{request.AudplnNo}-{request.Catcode}-{request.CorrectionNo}";
+            var useSftp = request.Test;
             var folderPath = Path.Combine(_auditImageRootPath, folderName);
-            Directory.CreateDirectory(folderPath);
+            var sftpFolderPath = $"{SftpRootPath.TrimEnd('/')}/{folderName}";
+            if (!useSftp)
+            {
+                Directory.CreateDirectory(folderPath);
+            }
 
-            var savedFiles = new List<(string FilePath, string StoredFileName, IFormFile File)>();
+            var savedFiles = new List<SavedPhotoInfo>();
             IDbContextTransaction? transaction = null;
+            SftpClient? sftpClient = null;
             try
             {
-                foreach (var photo in request.Photos)
+                if (useSftp)
                 {
-                    var storedFileName = GenerateUniqueTimestampFileName(photo.FileName);
-                    var filePath = Path.Combine(folderPath, storedFileName);
-                    await SaveFileAsync(photo, filePath);
-                    savedFiles.Add((filePath, storedFileName, photo));
+                    sftpClient = CreateSftpClient();
+                    sftpClient.Connect();
+                    EnsureSftpDirectory(sftpClient, sftpFolderPath);
+                    foreach (var photo in request.Photos)
+                    {
+                        var storedFileName = GenerateUniqueTimestampFileName(photo.FileName);
+                        var remoteFilePath = $"{sftpFolderPath}/{storedFileName}";
+                        await UploadFileToSftpAsync(sftpClient, photo, remoteFilePath);
+                        savedFiles.Add(new SavedPhotoInfo(remoteFilePath, storedFileName, photo, true));
+                    }
+                }
+                else
+                {
+                    foreach (var photo in request.Photos)
+                    {
+                        var storedFileName = GenerateUniqueTimestampFileName(photo.FileName);
+                        var filePath = Path.Combine(folderPath, storedFileName);
+                        await SaveFileAsync(photo, filePath);
+                        savedFiles.Add(new SavedPhotoInfo(filePath, storedFileName, photo, false));
+                    }
                 }
 
                 transaction = await _amtContext.Database.BeginTransactionAsync();
-                var response = await SavePhotoMetadataAsync(request, folderName, savedFiles, baseUrl);
+                var photoRootPath = useSftp ? SftpRootPath : _auditImageRootPath;
+                var response = await SavePhotoMetadataAsync(request, folderName, savedFiles, baseUrl, photoRootPath);
                 await transaction.CommitAsync();
                 return response;
             }
@@ -134,11 +162,18 @@ ORDER BY PLNDTL.TARGET_DATE
                     await transaction.RollbackAsync();
                 }
 
-                foreach (var file in savedFiles)
+                if (useSftp)
                 {
-                    if (File.Exists(file.FilePath))
+                    DeleteSftpFiles(savedFiles, sftpClient);
+                }
+                else
+                {
+                    foreach (var file in savedFiles)
                     {
-                        File.Delete(file.FilePath);
+                        if (File.Exists(file.FilePath))
+                        {
+                            File.Delete(file.FilePath);
+                        }
                     }
                 }
 
@@ -146,6 +181,7 @@ ORDER BY PLNDTL.TARGET_DATE
             }
             finally
             {
+                sftpClient?.Dispose();
                 transaction?.Dispose();
             }
         }
@@ -172,8 +208,9 @@ ORDER BY PLNDTL.TARGET_DATE
         private async Task<List<AuditResultPhotoUploadResponse>> SavePhotoMetadataAsync(
             AuditResultPhotoUploadRequest request,
             string folderName,
-            List<(string FilePath, string StoredFileName, IFormFile File)> savedFiles,
-            string? baseUrl)
+            List<SavedPhotoInfo> savedFiles,
+            string? baseUrl,
+            string photoRootPath)
         {
             var auditResult = await _amtContext.KmsAudresMsts
                 .FirstOrDefaultAsync(x =>
@@ -199,7 +236,7 @@ ORDER BY PLNDTL.TARGET_DATE
             var responses = new List<AuditResultPhotoUploadResponse>();
             foreach (var savedFile in savedFiles)
             {
-                var photoLink = Path.Combine(_auditImageRootPath, folderName).Replace("\\", "/");
+                var photoLink = Path.Combine(photoRootPath, folderName).Replace("\\", "/");
                 var photoUrl = BuildPhotoUrl(folderName, savedFile.StoredFileName, baseUrl);
                 var photoEntity = new KmsAudresPho
                 {
@@ -321,5 +358,58 @@ ORDER BY PLNDTL.TARGET_DATE
                 return current;
             }
         }
+
+        private static SftpClient CreateSftpClient()
+        {
+            return new SftpClient(SftpHost, SftpUser, SftpPassword);
+        }
+
+        private static void EnsureSftpDirectory(SftpClient client, string remotePath)
+        {
+            var parts = remotePath.Trim('/').Split('/', StringSplitOptions.RemoveEmptyEntries);
+            var currentPath = string.Empty;
+            foreach (var part in parts)
+            {
+                currentPath += $"/{part}";
+                if (!client.Exists(currentPath))
+                {
+                    client.CreateDirectory(currentPath);
+                }
+            }
+        }
+
+        private static async Task UploadFileToSftpAsync(SftpClient client, IFormFile file, string remotePath)
+        {
+            await using var stream = file.OpenReadStream();
+            client.UploadFile(stream, remotePath);
+        }
+
+        private static void DeleteSftpFiles(IEnumerable<SavedPhotoInfo> files, SftpClient? client)
+        {
+            if (client == null)
+            {
+                return;
+            }
+
+            if (!client.IsConnected)
+            {
+                client.Connect();
+            }
+
+            foreach (var file in files)
+            {
+                if (!file.IsRemote)
+                {
+                    continue;
+                }
+
+                if (client.Exists(file.FilePath))
+                {
+                    client.DeleteFile(file.FilePath);
+                }
+            }
+        }
+
+        private sealed record SavedPhotoInfo(string FilePath, string StoredFileName, IFormFile File, bool IsRemote);
     }
 }

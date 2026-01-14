@@ -47,5 +47,11 @@ namespace erpsolution.entities
         [Required]
         //[DataType(DataType.Upload)] // Renders a file upload button in Swagger
         public List<IFormFile> Photos { get; set; } = new();
+
+        /// <summary>
+        /// Flag to use the SFTP test upload server.
+        /// </summary>
+        [DefaultValue(true)]
+        public bool Test { get; set; } = true;
     }
 }
