@@ -13,6 +13,8 @@ namespace erpsolution.service.Interface
 
         Task<List<AuditResultPhotoUploadResponse>> UploadPhotoAsync(AuditResultPhotoUploadRequest request, string? baseUrl = null);
 
+        Task<List<AuditResultPhotoDeleteResponse>> DeletePhotoAsync(AuditResultPhotoDeleteRequest request);
+
         Task<List<AuditResultPhotoListResponse>> GetPhotoListAsync(AuditResultPhotoListRequest request, string? baseUrl = null);
     }
 }

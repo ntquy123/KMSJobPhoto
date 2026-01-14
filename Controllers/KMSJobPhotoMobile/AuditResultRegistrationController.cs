@@ -111,6 +111,24 @@ namespace erpsolution.api.Controllers.KMSJobPhotoMobile
             }
         }
 
+        [ApiExplorerSettings(GroupName = "kmsjobphoto_mobile")]
+        [HttpPost(nameof(DeletePhoto))]
+        [ProducesResponseType(typeof(HandleResponse<List<AuditResultPhotoDeleteResponse>>), 200)]
+        [ProducesResponseType(typeof(HandleResponse<object>), 400)]
+        public async Task<IActionResult> DeletePhoto([FromBody] AuditResultPhotoDeleteRequest request)
+        {
+            try
+            {
+                var result = await _service.DeletePhotoAsync(request);
+                return Ok(new HandleResponse<List<AuditResultPhotoDeleteResponse>>(true, string.Empty, result, null));
+            }
+            catch (Exception ex)
+            {
+                var message = await LogErrorAsync(ex, "Audit Result Registration", request);
+                return Json(new HandleResponse<List<AuditResultPhotoDeleteResponse>>(false, message, null));
+            }
+        }
+
         private async Task<string> LogErrorAsync(Exception ex, string menuName, object vm = null)
         {
             string currentUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}{HttpContext.Request.QueryString}";

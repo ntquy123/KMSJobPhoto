@@ -294,6 +294,88 @@ ORDER BY PLNDTL.TARGET_DATE
                 .ToList();
         }
 
+        public async Task<List<AuditResultPhotoDeleteResponse>> DeletePhotoAsync(AuditResultPhotoDeleteRequest request)
+        {
+            if (request.Photos == null || !request.Photos.Any())
+            {
+                throw new ArgumentException("At least one photo is required", nameof(request.Photos));
+            }
+
+            var folderName = $"{request.AudplnNo}-{request.Catcode}-{request.CorrectionNo}";
+            var uploadToSftp = request.Test;
+            var localFolderPath = Path.Combine(_auditImageRootPath, folderName);
+            var sftpFolderPath = $"{SftpRootPath.TrimEnd('/')}/{folderName}";
+
+            SftpClient? sftpClient = null;
+            try
+            {
+                if (uploadToSftp)
+                {
+                    sftpClient = CreateSftpClient();
+                    sftpClient.Connect();
+                }
+
+                var photoSeqs = request.Photos.Select(x => x.PhotoSeq).ToList();
+                var photoEntities = await _amtContext.KmsAudresPhos
+                    .Where(x => x.AudplnNo == request.AudplnNo &&
+                                x.Catcode == request.Catcode &&
+                                x.CorrectionNo == request.CorrectionNo &&
+                                photoSeqs.Contains(x.PhoSeq))
+                    .ToListAsync();
+
+                var now = await GetDatabaseNowAsync();
+                var responses = new List<AuditResultPhotoDeleteResponse>();
+                foreach (var item in request.Photos)
+                {
+                    var photoEntity = photoEntities.FirstOrDefault(x => x.PhoSeq == item.PhotoSeq);
+                    if (photoEntity == null)
+                    {
+                        continue;
+                    }
+
+                    var storedFileName = string.IsNullOrWhiteSpace(item.FileName)
+                        ? photoEntity.PhoFile
+                        : item.FileName;
+                    if (string.IsNullOrWhiteSpace(storedFileName))
+                    {
+                        continue;
+                    }
+
+                    var localFilePath = Path.Combine(localFolderPath, storedFileName);
+                    if (File.Exists(localFilePath))
+                    {
+                        File.Delete(localFilePath);
+                    }
+
+                    if (uploadToSftp)
+                    {
+                        var remoteFilePath = $"{sftpFolderPath}/{storedFileName}";
+                        if (sftpClient!.Exists(remoteFilePath))
+                        {
+                            sftpClient.DeleteFile(remoteFilePath);
+                        }
+                    }
+
+                    _amtContext.KmsAudresPhos.Remove(photoEntity);
+
+                    responses.Add(new AuditResultPhotoDeleteResponse
+                    {
+                        PhotoSeq = item.PhotoSeq,
+                        FileName = storedFileName,
+                        DeletedAt = now
+                    });
+                }
+
+                await _amtContext.SaveChangesAsync();
+
+                return responses;
+            }
+            finally
+            {
+                sftpClient?.Dispose();
+            }
+        }
+
         private async Task<decimal> GetNextPhotoSequenceAsync(AuditResultPhotoUploadRequest request)
         {
             var currentMax = await _amtContext.KmsAudresPhos
