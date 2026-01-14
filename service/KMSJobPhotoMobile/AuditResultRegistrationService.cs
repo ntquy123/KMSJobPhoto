@@ -112,46 +112,41 @@ ORDER BY PLNDTL.TARGET_DATE
             }
 
             var folderName = $"{request.AudplnNo}-{request.Catcode}-{request.CorrectionNo}";
-            var useSftp = request.Test;
+            var uploadToSftp = request.Test;
             var folderPath = Path.Combine(_auditImageRootPath, folderName);
             var sftpFolderPath = $"{SftpRootPath.TrimEnd('/')}/{folderName}";
-            if (!useSftp)
-            {
-                Directory.CreateDirectory(folderPath);
-            }
+            Directory.CreateDirectory(folderPath);
 
-            var savedFiles = new List<SavedPhotoInfo>();
+            var localFiles = new List<SavedPhotoInfo>();
+            var sftpFiles = new List<SavedPhotoInfo>();
             IDbContextTransaction? transaction = null;
             SftpClient? sftpClient = null;
             try
             {
-                if (useSftp)
+                if (uploadToSftp)
                 {
                     sftpClient = CreateSftpClient();
                     sftpClient.Connect();
                     EnsureSftpDirectory(sftpClient, sftpFolderPath);
-                    foreach (var photo in request.Photos)
-                    {
-                        var storedFileName = GenerateUniqueTimestampFileName(photo.FileName);
-                        var remoteFilePath = $"{sftpFolderPath}/{storedFileName}";
-                        await UploadFileToSftpAsync(sftpClient, photo, remoteFilePath);
-                        savedFiles.Add(new SavedPhotoInfo(remoteFilePath, storedFileName, photo, true));
-                    }
                 }
-                else
+
+                foreach (var photo in request.Photos)
                 {
-                    foreach (var photo in request.Photos)
+                    var storedFileName = GenerateUniqueTimestampFileName(photo.FileName);
+                    var filePath = Path.Combine(folderPath, storedFileName);
+                    await SaveFileAsync(photo, filePath);
+                    localFiles.Add(new SavedPhotoInfo(filePath, storedFileName, photo, false));
+
+                    if (uploadToSftp)
                     {
-                        var storedFileName = GenerateUniqueTimestampFileName(photo.FileName);
-                        var filePath = Path.Combine(folderPath, storedFileName);
-                        await SaveFileAsync(photo, filePath);
-                        savedFiles.Add(new SavedPhotoInfo(filePath, storedFileName, photo, false));
+                        var remoteFilePath = $"{sftpFolderPath}/{storedFileName}";
+                        await UploadFileToSftpAsync(sftpClient!, photo, remoteFilePath);
+                        sftpFiles.Add(new SavedPhotoInfo(remoteFilePath, storedFileName, photo, true));
                     }
                 }
 
                 transaction = await _amtContext.Database.BeginTransactionAsync();
-                var photoRootPath = useSftp ? SftpRootPath : _auditImageRootPath;
-                var response = await SavePhotoMetadataAsync(request, folderName, savedFiles, baseUrl, photoRootPath);
+                var response = await SavePhotoMetadataAsync(request, folderName, localFiles, baseUrl, _auditImageRootPath);
                 await transaction.CommitAsync();
                 return response;
             }
@@ -162,18 +157,16 @@ ORDER BY PLNDTL.TARGET_DATE
                     await transaction.RollbackAsync();
                 }
 
-                if (useSftp)
+                if (uploadToSftp)
                 {
-                    DeleteSftpFiles(savedFiles, sftpClient);
+                    DeleteSftpFiles(sftpFiles, sftpClient);
                 }
-                else
+
+                foreach (var file in localFiles)
                 {
-                    foreach (var file in savedFiles)
+                    if (File.Exists(file.FilePath))
                     {
-                        if (File.Exists(file.FilePath))
-                        {
-                            File.Delete(file.FilePath);
-                        }
+                        File.Delete(file.FilePath);
                     }
                 }
 
