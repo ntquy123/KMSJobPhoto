@@ -24,7 +24,7 @@ namespace erpsolution.service.KMSJobPhotoMobile
         private const string SftpHost = "10.10.1.208";
         private const string SftpUser = "pkuser";
         private const string SftpPassword = "PKtest2018!@#";
-        private const string SftpRootPath = "/home/pkuser/kmsjobphoto";
+        private const string SftpRootPath = "/home/data/PKKMS/upload/audit/img";
         private static readonly object TimestampLock = new();
         private static long _lastUnixTimestampMs;
         private readonly string _auditImageRootPath;
