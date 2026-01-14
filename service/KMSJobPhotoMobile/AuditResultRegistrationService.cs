@@ -23,7 +23,7 @@ namespace erpsolution.service.KMSJobPhotoMobile
         private const string PhotoDeviceMobile = "MOBILE";
         private const string SftpHost = "10.10.1.208";
         private const string SftpUser = "pkuser";
-        private const string SftpPassword = "1234@@";
+        private const string SftpPassword = "PKtest2018!@#";
         private const string SftpRootPath = "/home/pkuser/kmsjobphoto";
         private static readonly object TimestampLock = new();
         private static long _lastUnixTimestampMs;
