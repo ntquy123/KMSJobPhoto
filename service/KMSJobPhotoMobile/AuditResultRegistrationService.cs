@@ -19,14 +19,11 @@ namespace erpsolution.service.KMSJobPhotoMobile
 {
     public class AuditResultRegistrationService : ServiceBase<AuditTodoRow>, IAuditResultRegistrationService
     {
-        private const string DefaultPhotoName = "imagename.jpg";
         private const string PhotoDeviceMobile = "MOBILE";
         private const string SftpHost = "10.10.1.208";
         private const string SftpUser = "pkuser";
         private const string SftpPassword = "PKtest2018!@#";
         private const string SftpRootPath = "/home/data/PKKMS/upload/audit/img";
-        private static readonly object TimestampLock = new();
-        private static long _lastUnixTimestampMs;
         private readonly string _auditImageRootPath;
         private readonly string _auditImageBaseUrl;
 
@@ -132,7 +129,7 @@ ORDER BY PLNDTL.TARGET_DATE
 
                 foreach (var photo in request.Photos)
                 {
-                    var storedFileName = GenerateUniqueTimestampFileName(photo.FileName);
+                    var storedFileName = Path.GetFileName(photo.FileName);
                     var filePath = Path.Combine(folderPath, storedFileName);
                     await SaveFileAsync(photo, filePath);
                     localFiles.Add(new SavedPhotoInfo(filePath, storedFileName, photo, false));
@@ -217,7 +214,7 @@ ORDER BY PLNDTL.TARGET_DATE
             }
 
             var currentUser = _currentUser.UserId.ToString();
-            var now = DateTime.Now;
+            var now = await GetDatabaseNowAsync();
 
             auditResult.CorrectiveAction = request.CorrectiveAction;
             auditResult.CorrectedDate = now;
@@ -238,7 +235,7 @@ ORDER BY PLNDTL.TARGET_DATE
                     CorrectionNo = request.CorrectionNo,
                     PhoSeq = nextSeq,
                     PhoFile = savedFile.StoredFileName,
-                    PhoName = DefaultPhotoName,
+                    PhoName = savedFile.File.FileName,
                     PhoSize = savedFile.File.Length,
                     PhoLink = photoLink,
                     PhoDesc = request.PhotoDescription,
@@ -330,26 +327,23 @@ ORDER BY PLNDTL.TARGET_DATE
             return $"{resolvedBaseUrl.TrimEnd('/')}/{folderName}/{fileName}";
         }
 
-        private static string GenerateUniqueTimestampFileName(string originalFileName)
+        private async Task<DateTime> GetDatabaseNowAsync()
         {
-            var extension = Path.GetExtension(originalFileName);
-            var timestamp = GenerateUniqueUnixTimestampMs();
-            return $"FILE_{timestamp}{extension}";
-        }
-
-        private static long GenerateUniqueUnixTimestampMs()
-        {
-            var current = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-            lock (TimestampLock)
+            await using var command = _amtContext.Database.GetDbConnection().CreateCommand();
+            if (command.Connection.State != ConnectionState.Open)
             {
-                if (current <= _lastUnixTimestampMs)
-                {
-                    current = _lastUnixTimestampMs + 1;
-                }
-
-                _lastUnixTimestampMs = current;
-                return current;
+                await command.Connection.OpenAsync();
             }
+
+            var currentTransaction = _amtContext.Database.CurrentTransaction;
+            if (currentTransaction != null)
+            {
+                command.Transaction = currentTransaction.GetDbTransaction();
+            }
+
+            command.CommandText = "SELECT SYSDATE FROM DUAL";
+            var result = await command.ExecuteScalarAsync();
+            return result is DateTime dateTime ? dateTime : Convert.ToDateTime(result);
         }
 
         private static SftpClient CreateSftpClient()
