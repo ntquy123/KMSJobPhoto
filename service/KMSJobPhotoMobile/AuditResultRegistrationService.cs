@@ -242,6 +242,13 @@ ORDER BY PLNDTL.TARGET_DATE
 
             if (savedFiles.Count == 0)
             {
+                responses.Add(new AuditResultPhotoUploadResponse
+                {
+                    AudplnNo = request.AudplnNo,
+                    Catcode = request.Catcode,
+                    CorrectionNo = request.CorrectionNo,
+                    UploadedAt = now
+                });
                 return responses;
             }
 
