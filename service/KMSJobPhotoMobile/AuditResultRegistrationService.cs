@@ -103,23 +103,35 @@ ORDER BY PLNDTL.TARGET_DATE
 
         public async Task<List<AuditResultPhotoUploadResponse>> UploadPhotoAsync(AuditResultPhotoUploadRequest request, string? baseUrl = null)
         {
-            if (request.Photos == null || !request.Photos.Any())
+            var hasPhotos = request.Photos != null && request.Photos.Any();
+            var hasCorrectiveAction = request.CorrectiveAction != null;
+
+            if (!hasPhotos && !hasCorrectiveAction)
             {
-                throw new ArgumentException("At least one photo is required", nameof(request.Photos));
+                throw new ArgumentException("At least one photo or corrective action is required", nameof(request));
             }
 
             var folderName = $"{request.AudplnNo}-{request.Catcode}-{request.CorrectionNo}";
-            var uploadToSftp = request.Test;
-            var folderPath = Path.Combine(_auditImageRootPath, folderName);
-            var sftpFolderPath = $"{SftpRootPath.TrimEnd('/')}/{folderName}";
-            Directory.CreateDirectory(folderPath);
-
             var localFiles = new List<SavedPhotoInfo>();
             var sftpFiles = new List<SavedPhotoInfo>();
             IDbContextTransaction? transaction = null;
             SftpClient? sftpClient = null;
+            var uploadToSftp = false;
             try
             {
+                if (!hasPhotos)
+                {
+                    transaction = await _amtContext.Database.BeginTransactionAsync();
+                    var correctiveActionResponse = await SavePhotoMetadataAsync(request, folderName, localFiles, baseUrl, _auditImageRootPath);
+                    await transaction.CommitAsync();
+                    return correctiveActionResponse;
+                }
+
+                uploadToSftp = request.Test;
+                var folderPath = Path.Combine(_auditImageRootPath, folderName);
+                var sftpFolderPath = $"{SftpRootPath.TrimEnd('/')}/{folderName}";
+                Directory.CreateDirectory(folderPath);
+
                 if (uploadToSftp)
                 {
                     sftpClient = CreateSftpClient();
@@ -143,9 +155,9 @@ ORDER BY PLNDTL.TARGET_DATE
                 }
 
                 transaction = await _amtContext.Database.BeginTransactionAsync();
-                var response = await SavePhotoMetadataAsync(request, folderName, localFiles, baseUrl, _auditImageRootPath);
+                var photoResponse = await SavePhotoMetadataAsync(request, folderName, localFiles, baseUrl, _auditImageRootPath);
                 await transaction.CommitAsync();
-                return response;
+                return photoResponse;
             }
             catch
             {
@@ -216,14 +228,24 @@ ORDER BY PLNDTL.TARGET_DATE
             var currentUser = _currentUser.UserId.ToString();
             var now = await GetDatabaseNowAsync();
 
-            auditResult.CorrectiveAction = request.CorrectiveAction;
-            auditResult.CorrectedDate = now;
-            auditResult.Uptid = currentUser;
-            auditResult.Uptdate = now;
-            _amtContext.KmsAudresMsts.Update(auditResult);
-            await _amtContext.SaveChangesAsync();
-            var nextSeq = await GetNextPhotoSequenceAsync(request);
             var responses = new List<AuditResultPhotoUploadResponse>();
+
+            if (request.CorrectiveAction != null)
+            {
+                auditResult.CorrectiveAction = request.CorrectiveAction;
+                auditResult.CorrectedDate = now;
+                auditResult.Uptid = currentUser;
+                auditResult.Uptdate = now;
+                _amtContext.KmsAudresMsts.Update(auditResult);
+                await _amtContext.SaveChangesAsync();
+            }
+
+            if (savedFiles.Count == 0)
+            {
+                return responses;
+            }
+
+            var nextSeq = await GetNextPhotoSequenceAsync(request);
             foreach (var savedFile in savedFiles)
             {
                 var photoLink = Path.Combine(photoRootPath, folderName).Replace("\\", "/");
