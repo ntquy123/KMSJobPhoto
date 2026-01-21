@@ -116,17 +116,18 @@ ORDER BY PLNDTL.TARGET_DATE
             var sftpFiles = new List<SavedPhotoInfo>();
             IDbContextTransaction? transaction = null;
             SftpClient? sftpClient = null;
+            var uploadToSftp = false;
             try
             {
                 if (!hasPhotos)
                 {
                     transaction = await _amtContext.Database.BeginTransactionAsync();
-                    var response = await SavePhotoMetadataAsync(request, folderName, localFiles, baseUrl, _auditImageRootPath);
+                    var correctiveActionResponse = await SavePhotoMetadataAsync(request, folderName, localFiles, baseUrl, _auditImageRootPath);
                     await transaction.CommitAsync();
-                    return response;
+                    return correctiveActionResponse;
                 }
 
-                var uploadToSftp = request.Test;
+                uploadToSftp = request.Test;
                 var folderPath = Path.Combine(_auditImageRootPath, folderName);
                 var sftpFolderPath = $"{SftpRootPath.TrimEnd('/')}/{folderName}";
                 Directory.CreateDirectory(folderPath);
@@ -154,9 +155,9 @@ ORDER BY PLNDTL.TARGET_DATE
                 }
 
                 transaction = await _amtContext.Database.BeginTransactionAsync();
-                var response = await SavePhotoMetadataAsync(request, folderName, localFiles, baseUrl, _auditImageRootPath);
+                var photoResponse = await SavePhotoMetadataAsync(request, folderName, localFiles, baseUrl, _auditImageRootPath);
                 await transaction.CommitAsync();
-                return response;
+                return photoResponse;
             }
             catch
             {
