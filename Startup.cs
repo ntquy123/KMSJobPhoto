@@ -266,7 +266,11 @@ namespace erpsolution.api
                 });
             }
 
-            string downloadsPath = Path.Combine(env.ContentRootPath, "downloads");
+            string downloadsPath = Environment.GetEnvironmentVariable("DOWNLOADS_PATH");
+            if (string.IsNullOrWhiteSpace(downloadsPath))
+            {
+                downloadsPath = Path.Combine(env.ContentRootPath, "downloads");
+            }
             if (Directory.Exists(downloadsPath))
             {
                 app.UseStaticFiles(new StaticFileOptions
