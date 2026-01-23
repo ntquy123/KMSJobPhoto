@@ -266,6 +266,16 @@ namespace erpsolution.api
                 });
             }
 
+            string downloadsPath = Path.Combine(env.ContentRootPath, "downloads");
+            if (Directory.Exists(downloadsPath))
+            {
+                app.UseStaticFiles(new StaticFileOptions
+                {
+                    FileProvider = new PhysicalFileProvider(downloadsPath),
+                    RequestPath = "/downloads"
+                });
+            }
+
             if (!string.IsNullOrWhiteSpace(appSettings.AuditImageRootPath) &&
                 Directory.Exists(appSettings.AuditImageRootPath))
             {

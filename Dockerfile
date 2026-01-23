@@ -29,6 +29,7 @@ RUN mkdir -p /home/data/PKKMS/upload/audit/img /upload
 
 # Copy the published output from the build stage
 COPY --from=build /app/publish .
+COPY --from=build /src/downloads ./downloads
 
 # Document the port the container listens on
 EXPOSE 8083
