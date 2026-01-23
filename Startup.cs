@@ -266,6 +266,25 @@ namespace erpsolution.api
                 });
             }
 
+            string downloadsPath = Environment.GetEnvironmentVariable("DOWNLOADS_PATH");
+            if (string.IsNullOrWhiteSpace(downloadsPath))
+            {
+                downloadsPath = Path.Combine(env.ContentRootPath, "downloads");
+            }
+            if (Directory.Exists(downloadsPath))
+            {
+                var downloadsContentTypes = new FileExtensionContentTypeProvider();
+                downloadsContentTypes.Mappings[".apk"] = "application/vnd.android.package-archive";
+
+                app.UseStaticFiles(new StaticFileOptions
+                {
+                    FileProvider = new PhysicalFileProvider(downloadsPath),
+                    RequestPath = "/downloads",
+                    ContentTypeProvider = downloadsContentTypes,
+                    ServeUnknownFileTypes = true
+                });
+            }
+
             if (!string.IsNullOrWhiteSpace(appSettings.AuditImageRootPath) &&
                 Directory.Exists(appSettings.AuditImageRootPath))
             {
