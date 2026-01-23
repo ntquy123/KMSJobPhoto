@@ -273,10 +273,17 @@ namespace erpsolution.api
             }
             if (Directory.Exists(downloadsPath))
             {
+ 
+                var downloadsContentTypes = new FileExtensionContentTypeProvider();
+                downloadsContentTypes.Mappings[".apk"] = "application/vnd.android.package-archive";
+
                 app.UseStaticFiles(new StaticFileOptions
                 {
                     FileProvider = new PhysicalFileProvider(downloadsPath),
-                    RequestPath = "/downloads"
+                    RequestPath = "/downloads",
+                    ContentTypeProvider = downloadsContentTypes,
+                    ServeUnknownFileTypes = true
+ 
                 });
             }
 
