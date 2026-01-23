@@ -16,6 +16,7 @@ using erpsolution.dal.Context;
 using Microsoft.EntityFrameworkCore;
 using erpsolution.dal.EF;
 using Oracle.ManagedDataAccess.Client;
+using Microsoft.AspNetCore.StaticFiles;
 
 
 namespace erpsolution.api
