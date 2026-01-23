@@ -17,6 +17,7 @@ services:
       # Bind host upload storage so the app can persist uploaded files without code changes
       - /home/data/PKKMS/upload:/home/data/PKKMS/upload
       - ./upload:/upload
+      - ./downloads:/usr/share/nginx/PKKMS/downloads:ro
     restart: always
 
   # nginx:
