@@ -49,6 +49,7 @@ namespace erpsolution.dal.EF
                 entity.Property(e => e.ReleaseDate).HasColumnName("RELEASE_DATE");
                 entity.Property(e => e.Description).HasColumnName("DESCRIPTION").HasMaxLength(255);
                 entity.Property(e => e.UseYn).HasColumnName("USEYN").HasMaxLength(1);
+                entity.Property(e => e.System).HasColumnName("SYSTEM");
             });
             modelBuilder.Entity<KmsAudresMst>(entity =>
             {
