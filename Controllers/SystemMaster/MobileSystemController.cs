@@ -29,7 +29,7 @@ namespace erpsolution.api.Controllers.SystemMaster
             try
             {
                 var getVersion = await _context.ZmMasMobileVersions.Where(x => x.UseYn == '1' && x.System == "PKKMS").ToListAsync();
-                if (getVersion.Count() > 1)
+                if (getVersion.Count() > 0)
                 {
                     getVersion = getVersion.OrderByDescending(x => x.VersionId).ToList();
                     var lastVersion = getVersion.Select(x => x.VersionId).FirstOrDefault();
